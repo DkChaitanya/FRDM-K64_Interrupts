@@ -1,28 +1,36 @@
 #include "fsl_device_registers.h"
 #include"MK64F12.h"
-void DelayFunction (void);
+void DelayFunction (void); //Function to introduce delay between the LED blinks//
 int main(void)
 {
+//Enabling clocks to specific Ports//
+//SIM_SCGC5_PORTn_MASK writes bit 1 to the particular bit of System Clock Gating Control Register which enables clock to particular port//
 	SIM_SCGC5 |= SIM_SCGC5_PORTB_MASK; //ENABLE CLOCK TO PORT B//
 	SIM_SCGC5 |= SIM_SCGC5_PORTC_MASK; //ENABLE CLOCK TO PORT C//
 	SIM_SCGC5 |= SIM_SCGC5_PORTA_MASK; //ENABLE CLOCK TO PORT A//
 
+//Setting the Port Specifications //
+//PCR is the Port Control Register, writing 0x100 to this register configures to its operating mode as GPIO//
 	PORTB_PCR21 = 0x100; //BLUE LED SET AS GPIO//
 	PORTB_PCR22 = 0x100; //RED LED SET AS GPIO//
-	PORTC_PCR6 = 0x90100; //SW2 - PORTC_PCR6: ISF=0,IRQC=9,MUX=1//
+	PORTC_PCR6 = 0x90100; //SW2 - PORTC_PCR6: ISF=0,IRQC=9,MUX=1, this configures the interrput to take place on rising edge//
 	PORTA_PCR4 = 0x100; //SW3 IS SET AS GPIO//
 
+//PDDR is the Port Data Direction Register which configures the direction of the specific pin//
+//Setting Port Directions//
 	GPIOB_PDDR |= (1<<21); //SETTING PTB21 AS OUTPUT//
 	GPIOB_PDDR |= (1<<22); //SETTING PTB21 AS OUTPUT//
 	GPIOC_PDDR |= (0<<6); //SETTING PTB21 AS INPUT//
 
+//Turn OFF the LEDs before initiating the functioning//
 	GPIOB_PDOR |= (1<<22); //TURN OFF RED LED//
 	GPIOB_PDOR |= (1<<21); //TURN OFF BLUE LED//
 
 	PORTC_ISFR = PORT_ISFR_ISF(0x40); //CLEAR INTERRUPT STATUS FLAG//
 	NVIC_EnableIRQ(PORTC_IRQn); //ENABLE PORTC INTERRUPT//
-    /* This for loop should be replaced. By default this loop allows a single stepping. */
-    for (;;) {
+	
+//Create an infinite loop and Blink Red LED in an infinite loop//
+for (;;) {
        GPIOB_PTOR |= (1<<22); //RED BLINK//
        DelayFunction();
     }
@@ -32,8 +40,8 @@ int main(void)
 void PORTC_IRQHandler (void)
 {
 	DelayFunction();
-	GPIOB_PSOR |= (1<<22); //Turn off Red LED//
-	GPIOB_PCOR |= (1<<21); //Turn on Blue LED//
+	GPIOB_PSOR |= (1<<22); //Turn off Red LED// //PSOR is the Port Set Output Register - Sets corresponding bit to logic 1//
+	GPIOB_PCOR |= (1<<21); //Turn on Blue LED// //PCOR is the Port Clear Output Register - Sets the corresponding bit to logic 0//
 	DelayFunction();
 	GPIOB_PSOR |= (1<<21); //Turn off Blue LED//
 	DelayFunction();
